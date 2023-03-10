@@ -5,6 +5,8 @@ from src.logger import logging
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
+import argparse
+from src.utils import read_yaml
 
 @dataclass
 class DataIngestionConfig:
@@ -16,7 +18,11 @@ class DataIngestion:
     def __init__(self):
         self.ingestion_config=DataIngestionConfig()
 
-    def initiate_data_ingestion(self):
+    def initiate_data_ingestion(self,params_path):
+
+        params=read_yaml(params_path)
+
+
         logging.info('Enter the data ingestion method or component')
         try:
             df=pd.read_csv('notebook\data\stud.csv')
@@ -28,7 +34,10 @@ class DataIngestion:
 
             logging.info('Train test split initiated')
 
-            train_set,test_set=train_test_split(df,test_size=0.2,random_state=42)
+            split_ratio=params['base']['test_split_ratio']
+            random_state=params['base']['random_state']
+
+            train_set,test_set=train_test_split(df,test_size=split_ratio,random_state=random_state)
 
             train_set.to_csv(self.ingestion_config.train_data_path,index=False,header=True)
 
@@ -45,8 +54,12 @@ class DataIngestion:
             raise CustomException(e,sys)
 
 if __name__=='__main__':
+
+    args=argparse.ArgumentParser()
+    args.add_argument("--params","-p",default="params.yaml")
+
+    parsed_args=args.parse_args()
+
+    
     obj=DataIngestion()
-    obj.initiate_data_ingestion()
-
-
-            
+    obj.initiate_data_ingestion(params_path=parsed_args.params)    
