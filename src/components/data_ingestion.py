@@ -10,26 +10,35 @@ from src.utils import read_yaml
 
 @dataclass
 class DataIngestionConfig:
-    train_data_path: str=os.path.join('artifacts',"train.csv")
-    test_data_path: str=os.path.join('artifacts',"test.csv")
-    raw_data_path: str=os.path.join('artifacts',"data.csv")
+    train_data_path: str
+    test_data_path: str
+    raw_data_path: str
 
 class DataIngestion:
-    def __init__(self):
-        self.ingestion_config=DataIngestionConfig()
+    def __init__(self,a,b,c):
+        self.ingestion_config = DataIngestionConfig(
+            train_data_path=os.path.join('artifacts', a),
+            test_data_path=os.path.join('artifacts', b),
+            raw_data_path=os.path.join('artifacts', c)
+        )
 
     def initiate_data_ingestion(self,params_path):
 
         params=read_yaml(params_path)
 
+        print(self.ingestion_config.train_data_path)
+        print(self.ingestion_config.test_data_path)
+
 
         logging.info('Enter the data ingestion method or component')
         try:
-            df=pd.read_csv('notebook\data\stud.csv')
+            data_path=params['Data_upload']['upload_from_local']['path']
+
+            df=pd.read_csv(data_path)
             logging.info('read the dataset as dataframe')
 
             os.makedirs(os.path.dirname(self.ingestion_config.raw_data_path),exist_ok=True)
-
+        
             df.to_csv(self.ingestion_config.raw_data_path,index=False,header=True)
 
             logging.info('Train test split initiated')
@@ -60,6 +69,11 @@ if __name__=='__main__':
 
     parsed_args=args.parse_args()
 
-    
-    obj=DataIngestion()
-    obj.initiate_data_ingestion(params_path=parsed_args.params)    
+    params = read_yaml(parsed_args.params)
+    a = params['Data_upload']['upload_from_local']['a']
+    b = params['Data_upload']['upload_from_local']['b']
+    c = params['Data_upload']['upload_from_local']['c']
+
+
+    obj=DataIngestion(a,b,c)
+    obj.initiate_data_ingestion(params_path=parsed_args.params)   

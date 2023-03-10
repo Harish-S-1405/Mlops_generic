@@ -1,4 +1,11 @@
+Data_upload:
+  upload_from_local: 
+    path: "C:\\Users\\User\\Desktop\\mlproject\\notebook\\data\\stud1.csv"
+    a: "train1.csv"
+    b: "test1.csv"
+    c: "stud1.csv"
 base:
   random_state: 42
   test_split_ratio: 0.2
+
 
