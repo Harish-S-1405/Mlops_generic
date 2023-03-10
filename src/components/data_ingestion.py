@@ -6,7 +6,8 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from dataclasses import dataclass
 import argparse
-from src.utils import read_yaml
+from src.utils import read_yaml,bucket
+import json
 
 @dataclass
 class DataIngestionConfig:
@@ -32,9 +33,21 @@ class DataIngestion:
 
         logging.info('Enter the data ingestion method or component')
         try:
-            data_path=params['Data_upload']['upload_from_local']['path']
 
+
+            ## Local upload
+            
+            data_path=params['Data_upload']['upload_from_local']['path']
             df=pd.read_csv(data_path)
+
+
+            # ###  GCP
+
+            # with open(params['Data_upload']["upload_from_gcp"]['json_file_path']) as f:
+            #       json_file = json.load(f)
+            # df = bucket(json_file,params['Data_upload']["upload_from_gcp"]['bucket_name'],params['Data_upload']["upload_from_gcp"]['file_path_name'],params['Data_upload']["upload_from_gcp"]['cloud_name'])
+
+
             logging.info('read the dataset as dataframe')
 
             os.makedirs(os.path.dirname(self.ingestion_config.raw_data_path),exist_ok=True)
