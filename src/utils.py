@@ -13,8 +13,15 @@ import yaml
 import numpy as np
 import sys
 import dill
-
+from sklearn.metrics import r2_score, mean_absolute_error, mean_squared_error
 from src.exception import CustomException
+from sklearn.model_selection import RandomizedSearchCV
+from sklearn.linear_model import LinearRegression, Ridge,Lasso
+from scipy.stats import randint as sp_randint
+from sklearn.ensemble import (
+     RandomForestRegressor,
+     AdaBoostRegressor,
+     GradientBoostingRegressor)
 
 def bucket(credentials_dict, bucket_name, file_name_path_or_object_key, cloud_name):
     if cloud_name.lower()=="gcp":
@@ -47,3 +54,89 @@ def save_object(file_path,obj):
 
     except Exception as e:
         raise CustomException(e, sys)
+    
+def evaluate_model(true, predicted): 
+
+    mae = mean_absolute_error(true, predicted)
+    mse = mean_squared_error(true, predicted)
+    rmse = np.sqrt(mean_squared_error(true, predicted))
+    r2_square = r2_score(true, predicted)
+
+    return mae, rmse, r2_square
+
+def train_models(X_train,y_train,X_test,y_test,models):
+
+    try:
+        train_report={}
+        test_report={}
+        for i in range(len(list(models))):
+            model=list(models.values())[i]
+            model.fit(X_train,y_train)
+
+            y_train_pred=model.predict(X_train)
+            y_test_pred=model.predict(X_test)
+
+            model_train_mae , model_train_rmse, model_train_r2 = evaluate_model(y_train, y_train_pred)
+            model_test_mae , model_test_rmse, model_test_r2 = evaluate_model(y_test, y_test_pred)
+
+            metrics=['rmse','mae','r2']
+            values_train=[model_train_rmse,model_train_mae,model_train_r2]
+            values_test=[model_test_rmse,model_test_mae,model_test_r2]
+
+            final1=dict(zip(metrics,values_train))
+            final2=dict(zip(metrics,values_test))
+
+            train_report[list(models.keys())[i]]=final1
+            test_report[list(models.keys())[i]]=final2
+
+
+        return train_report,test_report
+    
+    except Exception as e:
+        raise CustomException(e,sys)
+    
+
+def tuning(X_train,y_train,X_test,y_test,tune_models,params_path):
+
+    params=read_yaml(params_path)
+    param=dict(list(params.items())[2:])
+    print(param)
+    try:
+        train_report1={}
+        test_report1={}
+
+        for i in range(len(list(tune_models))):
+            model=list(tune_models.values())[i]
+            algo=list(tune_models.keys())[i]
+            random_grid=param[list(tune_models.keys())[i]]
+            print(random_grid)
+            # if(algo=="AdaBoost_Regressor_Tuned"):
+            #     random_grid['estimator']=[RandomForestRegressor()]
+
+
+            model_tuning = RandomizedSearchCV(estimator = model, param_distributions = random_grid,
+                        n_iter = 100, cv = 5, verbose=2, random_state=42, n_jobs = -1)
+            model_tuning.fit(X_train, y_train)
+
+            best_estimator = model_tuning.best_estimator_
+
+            y_train_pred=best_estimator.predict(X_train)
+            y_test_pred=best_estimator.predict(X_test)
+
+            model_train_mae , model_train_rmse, model_train_r2 = evaluate_model(y_train, y_train_pred)
+            model_test_mae , model_test_rmse, model_test_r2 = evaluate_model(y_test, y_test_pred)
+
+            metrics=['rmse','mae','r2']
+            values_train=[model_train_rmse,model_train_mae,model_train_r2]
+            values_test=[model_test_rmse,model_test_mae,model_test_r2]
+
+            final1=dict(zip(metrics,values_train))
+            final2=dict(zip(metrics,values_test))
+
+            train_report1[list(tune_models.keys())[i]]=final1
+            test_report1[list(tune_models.keys())[i]]=final2
+    
+        return train_report1,test_report1
+
+    except Exception as e:
+        raise CustomException(e,sys)
