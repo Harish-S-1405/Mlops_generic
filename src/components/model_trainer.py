@@ -74,47 +74,57 @@ class ModelTrainer:
                 "AdaBoost_Regressor_Tuned": AdaBoostRegressor()
             }
 
-            print(params_path)
-            base_train_report,base_test_report=train_models(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,models=base_models)
-            tune_train_report,tune_test_report=tuning(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,tune_models=tun_models,params_path=params_path)
+            model_report1=train_models(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,models=base_models)
+            model_report2=tuning(X_train=X_train,y_train=y_train,X_test=X_test,y_test=y_test,tune_models=tun_models,params_path=params_path)
 
-            train_final1=pd.DataFrame(base_train_report).T
-            test_final1=pd.DataFrame(base_test_report).T
+            model_report = model_report1.copy()
+            model_report.update(model_report2)
 
-            train_final2=pd.DataFrame(tune_train_report).T
-            test_final2=pd.DataFrame(tune_test_report).T
+
+            values_dict=list(model_report.values())
+            best_model_score = max([i[0] for i in values_dict])
+            # print(f"Best Model Score: {best_model_score}")
+            best_model = [i[1] for i in model_report.values() if i[0]==max([i[0] for i in model_report.values()])][0]
+
+            # train_final1=pd.DataFrame(base_train_report).T
+            # test_final1=pd.DataFrame(base_test_report).T
+
+            # train_final2=pd.DataFrame(tune_train_report).T
+            # test_final2=pd.DataFrame(tune_test_report).T
 
             # print(train_report)
             # print(test_report)
 
-            final_train_report=pd.concat([train_final1,train_final2],axis=0)
-            final_test_report=pd.concat([test_final1,test_final2],axis=0)
+            # final_train_report=pd.concat([train_final1,train_final2],axis=0)
+            # final_test_report=pd.concat([test_final1,test_final2],axis=0)
 
-            test_report = base_test_report.copy()
-            test_report.update(tune_test_report)
+            # test_report = base_test_report.copy()
+            # test_report.update(tune_test_report)
 
-            r2s=[]
-            for i in test_report.values():
-                r2s.append(i['r2'])
+            # r2s=[]
+            # for i in test_report.values():
+            #     r2s.append(i['r2'])
 
-            report=dict(zip(test_report.keys(),r2s))
+            # report=dict(zip(test_report.keys(),r2s))
 
-            best_model_score=max(sorted(report.values()))
+            # best_model_score=max(sorted(report.values()))
 
     
-            best_model_name=list(report.keys())[
-                list(report.values()).index(best_model_score)
-            ]
+            # best_model_name=list(report.keys())[
+            #     list(report.values()).index(best_model_score)
+            # ]
 
-            try:
-                best_model=base_models[best_model_name]
-            except:
-                pass
+            # try:
+            #     best_model=base_models[best_model_name]
+            # except:
+            #     pass
 
-            try:
-                best_model=tun_models[best_model_name]
-            except:
-                pass
+            # try:
+            #     best_model=tun_models[best_model_name]
+            # except:
+            #     pass
+
+            # print(best_model)
 
             if best_model_score<0.6:
                 raise CustomException('no best model found')
@@ -126,7 +136,9 @@ class ModelTrainer:
                 obj=best_model
             )
 
-            return final_test_report.sort_values(by='r2',ascending=False)
+            predicted=best_model.predict(X_test)
+            r2_sq=r2_score(y_test,predicted)
+            return r2_sq
 
         except Exception as e:
             raise CustomException(e,sys)

@@ -67,8 +67,11 @@ def evaluate_model(true, predicted):
 def train_models(X_train,y_train,X_test,y_test,models):
 
     try:
-        train_report={}
-        test_report={}
+        ## train_report={}
+        ## test_report={}
+
+        report1={}
+
         for i in range(len(list(models))):
             model=list(models.values())[i]
             model.fit(X_train,y_train)
@@ -76,21 +79,27 @@ def train_models(X_train,y_train,X_test,y_test,models):
             y_train_pred=model.predict(X_train)
             y_test_pred=model.predict(X_test)
 
-            model_train_mae , model_train_rmse, model_train_r2 = evaluate_model(y_train, y_train_pred)
-            model_test_mae , model_test_rmse, model_test_r2 = evaluate_model(y_test, y_test_pred)
+            train_model_score1 = r2_score(y_train, y_train_pred)
 
-            metrics=['rmse','mae','r2']
-            values_train=[model_train_rmse,model_train_mae,model_train_r2]
-            values_test=[model_test_rmse,model_test_mae,model_test_r2]
+            test_model_score1 = r2_score(y_test, y_test_pred)
 
-            final1=dict(zip(metrics,values_train))
-            final2=dict(zip(metrics,values_test))
+            ## model_train_mae , model_train_rmse, model_train_r2 = evaluate_model(y_train, y_train_pred)
+            ## model_test_mae , model_test_rmse, model_test_r2 = evaluate_model(y_test, y_test_pred)
 
-            train_report[list(models.keys())[i]]=final1
-            test_report[list(models.keys())[i]]=final2
+            ## metrics=['rmse','mae','r2']
+            ## values_train=[model_train_rmse,model_train_mae,model_train_r2]
+            ## values_test=[model_test_rmse,model_test_mae,model_test_r2]
+
+            report1[list(models.keys())[i]] = (test_model_score1,model)
+
+            ## final1=dict(zip(metrics,values_train))
+            ## final2=dict(zip(metrics,values_test))
+
+            ## train_report[list(models.keys())[i]]=final1
+            ## test_report[list(models.keys())[i]]=final2
 
 
-        return train_report,test_report
+        return report1
     
     except Exception as e:
         raise CustomException(e,sys)
@@ -102,8 +111,11 @@ def tuning(X_train,y_train,X_test,y_test,tune_models,params_path):
     param=dict(list(params.items())[2:])
     print(param)
     try:
-        train_report1={}
-        test_report1={}
+        ## train_report1={}
+        ## test_report1={}
+
+        report2={}
+
 
         for i in range(len(list(tune_models))):
             model=list(tune_models.values())[i]
@@ -123,20 +135,26 @@ def tuning(X_train,y_train,X_test,y_test,tune_models,params_path):
             y_train_pred=best_estimator.predict(X_train)
             y_test_pred=best_estimator.predict(X_test)
 
-            model_train_mae , model_train_rmse, model_train_r2 = evaluate_model(y_train, y_train_pred)
-            model_test_mae , model_test_rmse, model_test_r2 = evaluate_model(y_test, y_test_pred)
+            train_model_score2 = r2_score(y_train, y_train_pred)
 
-            metrics=['rmse','mae','r2']
-            values_train=[model_train_rmse,model_train_mae,model_train_r2]
-            values_test=[model_test_rmse,model_test_mae,model_test_r2]
+            test_model_score2 = r2_score(y_test, y_test_pred)
 
-            final1=dict(zip(metrics,values_train))
-            final2=dict(zip(metrics,values_test))
+            ## model_train_mae , model_train_rmse, model_train_r2 = evaluate_model(y_train, y_train_pred)
+            ## model_test_mae , model_test_rmse, model_test_r2 = evaluate_model(y_test, y_test_pred)
 
-            train_report1[list(tune_models.keys())[i]]=final1
-            test_report1[list(tune_models.keys())[i]]=final2
+            ## metrics=['rmse','mae','r2']
+            ## values_train=[model_train_rmse,model_train_mae,model_train_r2]
+            ## values_test=[model_test_rmse,model_test_mae,model_test_r2]
+
+            report2[list(tune_models.keys())[i]] = (test_model_score2,best_estimator)
+
+            ## final1=dict(zip(metrics,values_train))
+            ## final2=dict(zip(metrics,values_test))
+
+            ## train_report1[list(tune_models.keys())[i]]=final1
+            ## test_report1[list(tune_models.keys())[i]]=final2
     
-        return train_report1,test_report1
+        return report2
 
     except Exception as e:
         raise CustomException(e,sys)
